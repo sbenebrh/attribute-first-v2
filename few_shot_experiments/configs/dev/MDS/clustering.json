@@ -1,0 +1,9 @@
+{
+    "split": "dev",
+    "setting": "MDS",
+    "subtask": "clustering",
+    "n_demos": 2,
+    "num_retries": 5,
+    "temperature": 0.5,
+    "cut_surplus": true
+}

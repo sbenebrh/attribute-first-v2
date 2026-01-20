@@ -1,0 +1,19 @@
+{
+  "split": "dev",
+  "setting": "MDS",
+  "subtask": "content_selection",
+  "model_name": "models/gemini-pro-latest",
+  "n_demos": 2,
+  "num_retries": 5,
+  "temperature": 0.1,
+  "config_file": "configs/dev/MDS/content_selection.json",
+  "indir_alignments": null,
+  "indir_prompt": null,
+  "outdir": null,
+  "debugging": false,
+  "merge_cross_sents_highlights": false,
+  "CoT": false,
+  "cut_surplus": false,
+  "prct_surplus": null,
+  "always_with_question": false
+}

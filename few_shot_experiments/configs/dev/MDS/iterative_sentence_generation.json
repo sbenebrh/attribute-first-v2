@@ -1,0 +1,8 @@
+{
+    "split": "dev",
+    "setting": "MDS",
+    "n_demos": 3,
+    "num_retries": 5,
+    "temperature": 0.3,
+    "cut_surplus": true
+}
