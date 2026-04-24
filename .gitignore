@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
 .DS_Store
+.idea/
+.env
+*.env
+.claude/scheduled_tasks.lock

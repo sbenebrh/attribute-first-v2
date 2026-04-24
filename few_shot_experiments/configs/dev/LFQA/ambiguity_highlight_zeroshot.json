@@ -1,0 +1,10 @@
+{
+    "split": "dev",
+    "setting": "LFQA",
+    "subtask": "ambiguity_highlight",
+    "model_name": "models/gemini-3-flash-preview",
+    "n_demos": 0,
+    "num_retries": 8,
+    "temperature": 0.2,
+    "always_with_question": true
+}

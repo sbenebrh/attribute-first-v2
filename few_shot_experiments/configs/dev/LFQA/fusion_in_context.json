@@ -2,7 +2,7 @@
     "split": "dev",
     "setting": "LFQA",
     "subtask": "FiC",
-    "model_name": "models/gemini-pro-latest",
+    "model_name": "models/gemini-2.0-flash",
     "n_demos": 1,
     "num_retries": 5,
     "temperature": 0.3,

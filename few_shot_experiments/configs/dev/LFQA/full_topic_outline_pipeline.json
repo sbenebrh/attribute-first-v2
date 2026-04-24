@@ -1,0 +1,10 @@
+[
+    {
+        "subtask": "content_selection",
+        "config_file": "configs/dev/LFQA/content_selection.json"
+    },
+    {
+        "subtask": "topic_outline_fusion",
+        "config_file": "configs/dev/LFQA/topic_outline_fusion.json"
+    }
+]

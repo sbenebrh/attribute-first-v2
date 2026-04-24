@@ -232,7 +232,8 @@
         ],
         "cluster_CoT_topic": "Colombian government's agreement to meet FARC memebers to free hostages"
       }
-    ]
+    ],
+    "ambiguity_highlight_answer": "Document [1]: \nDocument [2]: Colombia's hardline government\nDocument [3]: \nDocument [4]: \nDocument [5]: "
   },
   {
     "answer": "Dr. George Bray, founding president of the North American Association for the Study of Obesity, warns that high-fructose corn syrup is a strong culprit behind childhood obesity. Obesity among children has tripled itself in the last 30-40 years. Obesity increases the risk for type 2 diabetes. Bray believes that environmental factors have more to do with obesity than genetics. He suggests that childhood obesity can be prevented by getting more sleep, decreasing sedentary activities, drinking more milk (calcium controls weight), thinking portion control and eating breakfast. An Institute of Medicine report found compelling evidence encouraging the food industry to change the nature of foods being marketed to children. Former US president Bill Clinton announced a 10-year initiative to combat childhood obesity, and also participated in an obesity-battling campaign invloving several cartoon characters. Clinton's involvement comes from his own health-related experience.",
@@ -434,6 +435,7 @@
         ],
         "cluster_CoT_topic": "the reason behind Bill Clinton's ivolvement in battling obesity"
       }
-    ]
+    ],
+    "ambiguity_highlight_answer": "Document [1]: \nDocument [2]: \nDocument [3]: "
   }
 ]

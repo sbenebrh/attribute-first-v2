@@ -1,5 +1,4 @@
 import json
-import itertools
 
 # NOTE: attribution_metrics is intentionally not imported here.
 # LongCite evaluation only needs get_data(), and we want to avoid extra deps.

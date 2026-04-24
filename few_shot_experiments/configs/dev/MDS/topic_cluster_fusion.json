@@ -1,0 +1,12 @@
+{
+    "split": "dev",
+    "setting": "MDS",
+    "subtask": "topic_cluster_fusion",
+    "n_demos": 0,
+    "num_retries": 5,
+    "temperature": 0.1,
+    "cut_surplus": true,
+    "CoT": true,
+    "max_examples": 20,
+    "model_name": "models/gemini-2.0-flash"
+}

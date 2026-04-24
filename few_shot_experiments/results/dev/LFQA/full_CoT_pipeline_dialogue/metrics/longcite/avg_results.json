@@ -1,0 +1,13 @@
+{
+  "citation_recall": 0.8826,
+  "citation_precision": 0.7785,
+  "citation_f1": 0.7674,
+  "prompt_tokens_total": 84891,
+  "completion_tokens_total": 1719,
+  "num_instances_scored": 44,
+  "model": "models/gemini-2.0-flash",
+  "max_statement_num": null,
+  "total_statements": 107,
+  "statements_with_any_cite": 99,
+  "pct_statements_with_any_cite": 0.9252
+}

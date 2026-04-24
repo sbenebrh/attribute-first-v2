@@ -1,5 +1,6 @@
 from utils import *
 from subtask_specific_utils import *
+from schemas import SUBTASK_SCHEMAS
 import logging
 from pathlib import Path
 # Set the logging level to INFO
@@ -31,14 +32,16 @@ def main(args):
     prompt_dict, alignments_dict = get_data(args)
 
     # get subtask related functions
-    parse_response_func, convert_to_pipeline_style_func = get_subtask_funcs(args.subtask)
+    structured_output = getattr(args, "structured_output", False)
+    parse_response_func, convert_to_pipeline_style_func = get_subtask_funcs(
+        args.subtask, structured_output=structured_output)
 
     if args.cut_surplus and args.subtask in SUBTASK_WITHOUT_GIVEN_HIGHLIGHTS and not args.prct_surplus:
         logging.error(f"when passing --cut-surplus with the subtask {args.subtask} - you need to also pass --prct-surplus")
         exit(1)
 
     # get subtask related prompt structures (instructions and answer-related)
-    specific_prompt_details = get_subtask_prompt_structures(prompt_dict=prompt_dict, setting=args.setting, subtask=args.subtask, CoT=args.CoT, always_with_question=args.always_with_question)
+    specific_prompt_details = get_subtask_prompt_structures(prompt_dict=prompt_dict, setting=args.setting, subtask=args.subtask, CoT=args.CoT, always_with_question=args.always_with_question, structured_output=getattr(args, "structured_output", False))
     
     used_demos, prompts, additional_data = construct_prompts(prompt_dict=prompt_dict, 
                                                              alignments_dict=alignments_dict, 
@@ -51,15 +54,39 @@ def main(args):
                                                              cut_surplus=args.cut_surplus,
                                                              prct_surplus=args.prct_surplus)
 
-    responses = prompt_model(prompts=prompts, 
-                             model_name=args.model_name, 
-                             parse_response_fn=parse_response_func, 
-                             num_retries=args.num_retries, 
-                             temperature=args.temperature)
+    structured_output = getattr(args, "structured_output", False)
+    response_schema = SUBTASK_SCHEMAS.get(args.subtask) if structured_output else None
+
+    # Rerun mode: only re-prompt instances that previously had ERROR outputs.
+    existing_results = {}
+    rerun = getattr(args, "rerun", False)
+    rerun_path = getattr(args, "rerun_path", None)
+    if rerun:
+        path_to_load = rerun_path or os.path.join(outdir, "results.json")
+        if os.path.exists(path_to_load):
+            with open(path_to_load, 'r') as f_existing:
+                existing_results = json.load(f_existing)
+            error_ids = {k for k, v in existing_results.items()
+                         if str(v.get("final_output", "")).startswith("ERROR")}
+            prompts = {k: v for k, v in prompts.items() if k in error_ids}
+            logging.info(f"Rerun mode: {len(prompts)} instances with ERROR outputs to retry.")
+        else:
+            logging.warning(f"Rerun path not found ({path_to_load}), running all instances.")
+
+    n_demos_to_use = getattr(args, "rerun_n_demos", None) or args.n_demos
+    temperature_to_use = getattr(args, "rerun_temperature", None) or args.temperature
+
+    responses = prompt_model(prompts=prompts,
+                             model_name=args.model_name,
+                             parse_response_fn=parse_response_func,
+                             num_retries=args.num_retries,
+                             temperature=temperature_to_use,
+                             response_schema=response_schema)
 
     ############# SAVE #############
     # combine results with all instances' details
-    final_results = {key:dict() for key in responses.keys()}
+    final_results = dict(existing_results)  # seed with existing results (empty if not rerun)
+    final_results.update({key: dict() for key in responses.keys()})
     for instance_name, resp in responses.items():
         final_results[instance_name].update(additional_data[instance_name])
         final_results[instance_name]['gold_summary'] = [elem['response'] for elem in alignments_dict if elem['unique_id']==instance_name][0]
@@ -96,5 +123,24 @@ if __name__ == "__main__":
     argparser.add_argument('--cut-surplus', action='store_true', default=False, help='whether to cut surplus text from prompts (in subtask with given highlights - everything after last highlight, and in tasks without - last prct_surplus sentences).')
     argparser.add_argument('--prct-surplus', type=float, default=None, help='for subtasks without given highlights (e.g. content_selection, e2e_only_setting, or ALCE) - what percentage of top document sents to drop in cases when the prompts are too long.')
     argparser.add_argument('--always-with-question', action='store_true', default=False, help='relevant for LFQA - whether to always add the question (also to clustering and FiC)')
+    argparser.add_argument('--structured-output', action='store_true', default=False,
+                           help='Use Gemini JSON mode (response_schema) for each subtask. '
+                                'Improves instruction following. For FiC, also enables abstain.')
+    argparser.add_argument('--rerun', action='store_true', default=False,
+                           help='Re-run only instances that had ERROR outputs.')
+    argparser.add_argument('--rerun-path', type=str, default=None,
+                           help='Path to existing results.json to patch (defaults to outdir/results.json).')
+    argparser.add_argument('--rerun-n-demos', type=int, default=None,
+                           help='Override n_demos for the rerun.')
+    argparser.add_argument('--rerun-temperature', type=float, default=None,
+                           help='Override temperature for the rerun.')
+    argparser.add_argument('--num-demo-changes', type=int, default=4,
+                           help='Number of demo changes on ERROR before giving up.')
+    argparser.add_argument('--max-examples', type=int, default=None,
+                           help='Cap total examples processed.')
+    argparser.add_argument('--no-prefix', action='store_true', default=False,
+                           help='Ablation: omit the prefix.')
+    argparser.add_argument('--dialogue-mode', action='store_true', default=False,
+                           help='Run pipeline as multi-turn chat (FiC only).')
     args = argparser.parse_args()
     main(args)

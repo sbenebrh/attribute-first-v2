@@ -1,0 +1,10 @@
+[
+    {
+        "subtask": "content_selection",
+        "config_file": "configs/dev/LFQA/content_selection_zeroshot.json"
+    },
+    {
+        "subtask": "fusion_in_context",
+        "config_file": "configs/dev/LFQA/fusion_in_context_zeroshot.json"
+    }
+]

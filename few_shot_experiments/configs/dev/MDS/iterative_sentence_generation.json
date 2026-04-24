@@ -4,5 +4,6 @@
     "n_demos": 3,
     "num_retries": 5,
     "temperature": 0.3,
-    "cut_surplus": true
+    "cut_surplus": true,
+    "model_name": "models/gemini-2.0-flash"
 }

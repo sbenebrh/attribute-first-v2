@@ -5,11 +5,11 @@
   "n_demos": 2,
   "num_retries": 5,
   "temperature": 0.1,
-  "config_file": "configs/dev/MDS/ambiguity_highlight.json",
-  "outdir": "results/dev/MDS/full_CoT_pipeline/itermediate_results/ambiguity_highlight",
-  "indir_alignments": "results/dev/MDS/full_CoT_pipeline/itermediate_results/content_selection/pipeline_format_results.json",
-  "indir_prompt": null,
   "model_name": "models/gemini-2.0-flash",
+  "config_file": "configs/dev/MDS/ambiguity_highlight.json",
+  "outdir": "results/dev/MDS/full_decontextualization_CoT_pipeline/itermediate_results/ambiguity_highlight",
+  "indir_alignments": "results/dev/MDS/full_decontextualization_CoT_pipeline/itermediate_results/content_selection/pipeline_format_results.json",
+  "indir_prompt": null,
   "debugging": false,
   "merge_cross_sents_highlights": false,
   "CoT": false,
@@ -21,5 +21,7 @@
   "rerun_path": null,
   "rerun_n_demos": null,
   "rerun_temperature": null,
-  "no_prefix": false
+  "no_prefix": false,
+  "structured_output": false,
+  "dialogue_mode": false
 }

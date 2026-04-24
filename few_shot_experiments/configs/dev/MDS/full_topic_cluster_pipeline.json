@@ -1,0 +1,10 @@
+[
+    {
+        "subtask": "content_selection",
+        "config_file": "configs/dev/MDS/content_selection.json"
+    },
+    {
+        "subtask": "topic_cluster_fusion",
+        "config_file": "configs/dev/MDS/topic_cluster_fusion.json"
+    }
+]

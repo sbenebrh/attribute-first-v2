@@ -1,0 +1,10 @@
+{"id": "test0", "rougeL_precision": 0.2471264367816092, "rougeL_recall": 0.2847682119205298, "rougeL_f1": 0.26461538461538464, "lcs_len": 43, "cand_len": 174, "ref_len": 151}
+{"id": "test13", "rougeL_precision": 0.24817518248175183, "rougeL_recall": 0.12318840579710146, "rougeL_f1": 0.16464891041162227, "lcs_len": 34, "cand_len": 137, "ref_len": 276}
+{"id": "test16", "rougeL_precision": 0.2096069868995633, "rougeL_recall": 0.17454545454545456, "rougeL_f1": 0.19047619047619047, "lcs_len": 48, "cand_len": 229, "ref_len": 275}
+{"id": "test18", "rougeL_precision": 0.2235294117647059, "rougeL_recall": 0.16379310344827586, "rougeL_f1": 0.1890547263681592, "lcs_len": 38, "cand_len": 170, "ref_len": 232}
+{"id": "test19", "rougeL_precision": 0.16, "rougeL_recall": 0.12962962962962962, "rougeL_f1": 0.1432225063938619, "lcs_len": 28, "cand_len": 175, "ref_len": 216}
+{"id": "test2", "rougeL_precision": 0.19339622641509435, "rougeL_recall": 0.26973684210526316, "rougeL_f1": 0.22527472527472528, "lcs_len": 41, "cand_len": 212, "ref_len": 152}
+{"id": "test20", "rougeL_precision": 0.28888888888888886, "rougeL_recall": 0.2613065326633166, "rougeL_f1": 0.27440633245382584, "lcs_len": 52, "cand_len": 180, "ref_len": 199}
+{"id": "test21", "rougeL_precision": 0.18045112781954886, "rougeL_recall": 0.10666666666666667, "rougeL_f1": 0.1340782122905028, "lcs_len": 24, "cand_len": 133, "ref_len": 225}
+{"id": "test22", "rougeL_precision": 0.1702127659574468, "rougeL_recall": 0.11347517730496454, "rougeL_f1": 0.13617021276595745, "lcs_len": 16, "cand_len": 94, "ref_len": 141}
+{"id": "test24", "rougeL_precision": 0.22448979591836735, "rougeL_recall": 0.03793103448275862, "rougeL_f1": 0.06489675516224189, "lcs_len": 11, "cand_len": 49, "ref_len": 290}

@@ -1,0 +1,5 @@
+{"id": "test0", "rougeL_precision": 0.0, "rougeL_recall": 0.0, "rougeL_f1": 0.0, "lcs_len": 0, "cand_len": 0, "ref_len": 151}
+{"id": "test11", "rougeL_precision": 0.0, "rougeL_recall": 0.0, "rougeL_f1": 0.0, "lcs_len": 0, "cand_len": 0, "ref_len": 290}
+{"id": "test16", "rougeL_precision": 0.0, "rougeL_recall": 0.0, "rougeL_f1": 0.0, "lcs_len": 0, "cand_len": 0, "ref_len": 275}
+{"id": "test17", "rougeL_precision": 0.0, "rougeL_recall": 0.0, "rougeL_f1": 0.0, "lcs_len": 0, "cand_len": 0, "ref_len": 214}
+{"id": "test21", "rougeL_precision": 0.0, "rougeL_recall": 0.0, "rougeL_f1": 0.0, "lcs_len": 0, "cand_len": 0, "ref_len": 225}

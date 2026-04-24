@@ -2,7 +2,7 @@
     "split": "dev",
     "setting": "LFQA",
     "subtask": "clustering",
-    "model_name": "models/gemini-pro-latest",
+    "model_name": "models/gemini-3-flash-preview",
     "n_demos": 1,
     "num_retries": 5,
     "temperature": 0.1,

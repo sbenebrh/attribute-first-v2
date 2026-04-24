@@ -1,9 +1,26 @@
 import os
 import time
 import traceback
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import google.generativeai as genai
+
+# Load .env from repo root (walks up from this file's location).
+def _load_dotenv_if_needed():
+    here = Path(__file__).resolve()
+    for parent in [here.parent, here.parent.parent, here.parent.parent.parent]:
+        env_file = parent / ".env"
+        if env_file.exists():
+            with open(env_file) as _f:
+                for _line in _f:
+                    _line = _line.strip()
+                    if _line and not _line.startswith("#") and "=" in _line:
+                        _k, _v = _line.split("=", 1)
+                        os.environ.setdefault(_k.strip(), _v.strip())
+            break
+
+_load_dotenv_if_needed()
 
 
 def _normalize_stop_sequences(stop):

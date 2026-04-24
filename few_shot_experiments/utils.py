@@ -1,6 +1,18 @@
 import json
 import argparse
 import os
+from pathlib import Path as _Path
+
+# Load .env from repo root if present (never committed — see .gitignore).
+_env_file = _Path(__file__).parent.parent / ".env"
+if _env_file.exists():
+    with open(_env_file) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
@@ -12,8 +24,6 @@ import logging
 import string
 import time
 import openai
-import pathlib
-import textwrap
 import google.generativeai as genai
 # from IPython.display import display
 # from IPython.display import Markdown
@@ -21,6 +31,7 @@ import google.generativeai as genai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 genai_model = None
+_genai_model_name = None
 
 # Set the logging level to INFO
 logging.basicConfig(level=logging.INFO)
@@ -92,16 +103,11 @@ def get_token_counter(model_name):
             "tkn_max_limit": int(tkn_max_limit),
         }
 
-    # Backward compat (just in case)
-    if model_name == "gemini-pro":
-        return {
-            "tkn_counter": TokenCounter(model_name="models/gemini-pro-latest"),
-            "tkn_max_limit": 30000,
-        }
-
     raise Exception(
         f"not supported yet for {model_name}. Please add a token counter and max limit for {model_name}"
     )
+
+
 def highlight_sep_strip(txt):
     "remove trailing and opening SPAN_SEP"
     txt = txt.strip()
@@ -337,34 +343,48 @@ def save_results(outdir, used_demos, final_results, pipeline_format_results=None
     final_results_dataframe = pd.DataFrame(df_style_data)
     final_results_dataframe.to_csv(os.path.join(outdir, "results.csv"), index=False)
 
-def gemini_call(prompt, model_name, output_max_length: int = 2048, temperature: int = 0):
-    # print(prompt)
-    global genai_model
-    if not genai_model:
-        genai_model = genai.GenerativeModel(model_name)
+_DIALOGUE_SAFETY_SETTINGS = [
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+]
+
+def create_chat_session(model_name: str):
+    """Create a new Gemini ChatSession for dialogue-mode pipelines."""
+    model_name = _normalize_model_name(model_name)
+    model = genai.GenerativeModel(model_name)
+    return model.start_chat(history=[])
+
+def gemini_chat_call(chat_session, message: str, output_max_length: int = 4096, temperature: float = 0):
+    """Send one turn to an active ChatSession and return the response text."""
+    generation_config = {"temperature": temperature, "max_output_tokens": output_max_length}
+    response = chat_session.send_message(
+        message,
+        generation_config=generation_config,
+        safety_settings=_DIALOGUE_SAFETY_SETTINGS,
+    )
+    try:
+        return response.text.strip()
+    except Exception as e:
+        raise Exception(str(e) + str(response.prompt_feedback))
+
+def gemini_call(prompt, model_name, output_max_length: int = 2048, temperature: int = 0,
+                response_schema: dict = None):
+    global genai_model, _genai_model_name
+    normalized = _normalize_model_name(model_name)
+    if genai_model is None or _genai_model_name != normalized:
+        genai_model = genai.GenerativeModel(normalized)
+        _genai_model_name = normalized
     generation_config = {
         "temperature": temperature,
         "max_output_tokens": output_max_length
     }
+    if response_schema is not None:
+        generation_config["response_mime_type"] = "application/json"
+        generation_config["response_schema"] = response_schema
 
-    safety_settings=[
-        {
-            "category": "HARM_CATEGORY_HATE_SPEECH",
-            "threshold": "BLOCK_NONE",
-        },
-        {
-            "category": "HARM_CATEGORY_HARASSMENT",
-            "threshold": "BLOCK_NONE",
-        },
-        {
-            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            "threshold": "BLOCK_NONE",
-        },
-        {
-            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-            "threshold": "BLOCK_NONE",
-        }
-    ]
+    safety_settings = _DIALOGUE_SAFETY_SETTINGS
 
     response = genai_model.generate_content(
         prompt,
@@ -388,15 +408,16 @@ def openai_call(prompt, model_name, output_max_length: int = 2048, temperature: 
         )
     return response.choices[0].message.content.strip()
 
-def model_call_wrapper(prompt: str, model_name: str, parse_response_fn, output_max_length : int = 4096, num_retries: int = 5, temperature: int = 0):
+def model_call_wrapper(prompt: str, model_name: str, parse_response_fn, output_max_length : int = 4096, num_retries: int = 5, temperature: int = 0, response_schema: dict = None):
     call_func = openai_call if "gpt" in model_name else gemini_call
     parsed_response, response = None, None
     for _ in range(num_retries):
         try:
-            response = call_func(prompt=prompt,
-                                 model_name=model_name,
-                                 output_max_length=output_max_length,
-                                 temperature=temperature)
+            call_kwargs = dict(prompt=prompt, model_name=model_name,
+                               output_max_length=output_max_length, temperature=temperature)
+            if response_schema is not None and call_func is gemini_call:
+                call_kwargs["response_schema"] = response_schema
+            response = call_func(**call_kwargs)
             parsed_response = parse_response_fn(
                 response=response,
                 prompt=prompt
@@ -406,7 +427,8 @@ def model_call_wrapper(prompt: str, model_name: str, parse_response_fn, output_m
         except Exception as exception:
             print(f"{exception}. Retrying...")
             error_message = str(exception)
-            time.sleep(1)
+            wait = 60 if "429" in str(exception) else 1
+            time.sleep(wait)
     if not parsed_response:
         if response: # there was a problem with the parsing
             return {"final_output":f"ERROR - {error_message}",
@@ -419,29 +441,20 @@ def model_call_wrapper(prompt: str, model_name: str, parse_response_fn, output_m
     else:
         return parsed_response   
 
-def prompt_model(prompts: Dict, model_name: str, parse_response_fn, output_max_length : int = 4096, num_retries: int = 5, verbose: bool = True, temperature: int = 0):
+def prompt_model(prompts: Dict, model_name: str, parse_response_fn, output_max_length : int = 4096, num_retries: int = 5, verbose: bool = True, temperature: int = 0, response_schema: dict = None):
     prompts_tpls = [(inst_name, prompt) for inst_name,prompt in prompts.items()]
     results = dict()
     prompts_tpls = tqdm(prompts_tpls) if verbose else prompts_tpls
     for inst_name, prompt in prompts_tpls:
-        results[inst_name] = model_call_wrapper(prompt=prompt, 
+        results[inst_name] = model_call_wrapper(prompt=prompt,
                                                 model_name=model_name,
-                                                parse_response_fn=parse_response_fn, 
+                                                parse_response_fn=parse_response_fn,
                                                 output_max_length=output_max_length,
                                                 num_retries=num_retries,
-                                                temperature=temperature)
+                                                temperature=temperature,
+                                                response_schema=response_schema)
     return results
 
-def find_sublist(lst1, lst2):
-    """
-    check if lst2 is a sublist of lst1 (consecutive and same order) 
-    if yes - return index in lst1 where lst2 starts, else return -1
-    """
-    len_lst2 = len(lst2)
-    for i in range(len(lst1) - len_lst2 + 1):
-        if lst1[i:i+len_lst2] == lst2:
-            return i
-    return -1  
 
 def get_consecutive_subspans(idx_lst):
     if not idx_lst:
@@ -632,8 +645,11 @@ def make_demo(item, prompt, doc_prompt=None, instruction=None, answer_related_pr
         if "{NEXT_SENT}" in prompt: # the sentence-wise fusion
             prompt = prompt.replace("{NEXT_SENT}", item['answer'])
 
+        if "{AH_RESP}" in prompt: # ambiguity_highlight demo answer
+            prompt = prompt.replace("{AH_RESP}", item.get('ambiguity_highlight_answer', ''))
+
     else:
         if not answer_related_prompts["answer_prompt"].startswith("Answer:"):
             prompt = prompt.replace(answer_related_prompts["answer_prompt"], "")
-        prompt = prompt.replace("{PLANNING}", "").replace("{CLUSTERS}", "").replace("{CoT_CLUSTERING}", "").replace("{HDOCS}", "").replace("{NEXT_SENT}", "").replace("{CoT_RESP}", "").replace("{RESP}", "").replace("{ALCE_RESP}", "").strip()
+        prompt = prompt.replace("{PLANNING}", "").replace("{CLUSTERS}", "").replace("{CoT_CLUSTERING}", "").replace("{HDOCS}", "").replace("{NEXT_SENT}", "").replace("{CoT_RESP}", "").replace("{RESP}", "").replace("{ALCE_RESP}", "").replace("{AH_RESP}", "").strip()
     return prompt, highlight_lists
