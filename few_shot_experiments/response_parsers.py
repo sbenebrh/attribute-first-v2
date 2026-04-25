@@ -163,13 +163,38 @@ def parse_FiC_response(response, prompt):
                 "full_model_response":response}
 
 
+def _extract_partial_highlights(text: str) -> list:
+    """Recover complete JSON highlight items from a truncated response."""
+    items = []
+    start = text.find("[")
+    if start == -1:
+        return items
+    decoder = json.JSONDecoder()
+    pos = start + 1
+    while pos < len(text):
+        while pos < len(text) and text[pos] in " \t\n\r,":
+            pos += 1
+        if pos >= len(text) or text[pos] == "]":
+            break
+        try:
+            obj, end_pos = decoder.raw_decode(text, pos)
+            if isinstance(obj, dict) and "doc_id" in obj and "span_text" in obj:
+                items.append(obj)
+            pos = end_pos
+        except json.JSONDecodeError:
+            break
+    return items
+
+
 def parse_content_selection_structured_response(response, prompt):
     """Parse CS response when structured output (JSON mode) was used."""
     try:
         data = json.loads(response)
         highlights = data.get("highlights", [])
-    except Exception:
-        return parse_content_selection_response(response, prompt)
+    except json.JSONDecodeError:
+        highlights = _extract_partial_highlights(response)
+        if not highlights:
+            return parse_content_selection_response(response, prompt)
 
     salience_dict = {}
     for item in highlights:
@@ -208,8 +233,10 @@ def parse_ambiguity_highlight_structured_response(response, prompt=None):
     try:
         data = json.loads(response)
         highlights = data.get("highlights", [])
-    except Exception:
-        return parse_ambiguity_highlight_response(response, prompt)
+    except json.JSONDecodeError:
+        highlights = _extract_partial_highlights(response)
+        if not highlights:
+            return parse_ambiguity_highlight_response(response, prompt)
 
     ha_dict = {}
     for item in highlights:

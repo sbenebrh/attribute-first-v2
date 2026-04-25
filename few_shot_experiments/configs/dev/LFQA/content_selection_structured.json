@@ -7,5 +7,6 @@
     "num_retries": 5,
     "temperature": 0.3,
     "always_with_question": true,
-    "structured_output": true
+    "structured_output": true,
+    "output_max_length": 8192
 }

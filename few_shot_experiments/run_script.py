@@ -81,7 +81,8 @@ def main(args):
                              parse_response_fn=parse_response_func,
                              num_retries=args.num_retries,
                              temperature=temperature_to_use,
-                             response_schema=response_schema)
+                             response_schema=response_schema,
+                             output_max_length=getattr(args, "output_max_length", 4096))
 
     ############# SAVE #############
     # combine results with all instances' details

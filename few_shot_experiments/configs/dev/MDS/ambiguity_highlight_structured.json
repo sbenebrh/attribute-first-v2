@@ -6,5 +6,6 @@
     "num_retries": 5,
     "temperature": 0.1,
     "structured_output": true,
-    "model_name": "models/gemini-2.0-flash"
+    "model_name": "models/gemini-2.0-flash",
+    "output_max_length": 8192
 }

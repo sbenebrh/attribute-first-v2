@@ -9,5 +9,6 @@
     "CoT": true,
     "max_examples": 20,
     "structured_output": true,
-    "model_name": "models/gemini-2.0-flash"
+    "model_name": "models/gemini-2.0-flash",
+    "output_max_length": 8192
 }

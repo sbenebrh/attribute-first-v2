@@ -9,5 +9,6 @@
     "always_with_question": true,
     "cut_surplus": true,
     "CoT": true,
-    "structured_output": true
+    "structured_output": true,
+    "output_max_length": 8192
 }
