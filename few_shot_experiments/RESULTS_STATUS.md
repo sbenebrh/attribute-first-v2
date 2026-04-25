@@ -60,14 +60,19 @@ All four structured variants (LFQA + MDS × CoT + decontex) produced 100% empty 
 
 ## Open issues
 
-### HIGH: MDS zeroshot experiments — broken pipeline_format (30–38% None)
+### HIGH: MDS zeroshot experiments — broken pipeline_format (30–38% None) [ROOT CAUSE FOUND]
 
 Both `MDS/full_CoT_pipeline_zeroshot` and `MDS/full_decontextualization_CoT_pipeline_zeroshot`
 have 30–38% of highlights with `documentFile=None`, yielding LongCite F1 ≈ 0.10–0.13.
 
-The reparse had **zero effect** (0 instances fixed), which rules out the FiC regex as the cause.
-The breakage is upstream — likely in CS or clustering `pipeline_format_results.json`.
-Root cause not yet confirmed; needs investigation of CS/clustering outputs for these experiments.
+**Root cause (2026-04-25):** The "None highlights" are not real predictions — they are
+**rate-limit error strings** (`"ERROR - 429 Resource exhausted. Please try again later."`)
+that leak through `convert_FiC_CoT_results_to_pipeline_format`. The converter splits
+the error string with spaCy's sentence splitter and emits each sentence as a `scuSentence`
+with `documentFile=None`. So the F1 ≈ 0.13 is *metric-on-error-strings*, not a real F1.
+
+**Fix:** See IMPROVEMENTS.md §1.1 — drop ERROR instances before pipeline_format conversion.
+Then `--rerun` the 5 affected MDS zeroshot instances.
 
 ### HIGH: LFQA decontex pipeline — unexpectedly low F1 (0.2664)
 
